@@ -16,15 +16,10 @@ stages:
     steps:
     - checkout: self
 
-    - script: |
-        echo "Installing Terraform $(terraformVersion)"
-        sudo apt-get update -y
-        sudo apt-get install -y wget unzip
-        wget https://releases.hashicorp.com/terraform/${terraformVersion}/terraform_${terraformVersion}_linux_amd64.zip
-        unzip terraform_${terraformVersion}_linux_amd64.zip
-        sudo mv terraform /usr/local/bin/
-        terraform version
+    - task: TerraformInstaller@1
       displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
 
     - script: |
         echo 'Generating terraform.tfvars from secrets...'
