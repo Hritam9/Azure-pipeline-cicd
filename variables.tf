@@ -1,10 +1,10 @@
 variable "location" {
-  description = "Azure location"
+  description = "Azure region"
   default     = "East US"
 }
 
 variable "resource_group_name" {
-  description = "Name of the resource group"
+  description = "Resource group name"
   default     = "rg-funcapp-demo"
 }
 
@@ -33,18 +33,15 @@ variable "function_apps" {
   type = map(object({
     name    = string
     storage = string
-    version = string
   }))
   default = {
     app1 = {
       name    = "funcapp-one"
       storage = "funcappstorageone"
-      version = "~4"
     },
     app2 = {
       name    = "funcapp-two"
       storage = "funcappstoragetwo"
-      version = "~4"
     }
   }
 }
