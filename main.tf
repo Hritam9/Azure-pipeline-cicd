@@ -81,10 +81,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
 locals {
   function_apps = {
     "funcapp1" = {
-      name     = "funcapp-demo-1"
+      name     = "funcapp-demo-one"
     },
     "funcapp2" = {
-      name     = "funcapp-demo-2"
+      name     = "funcapp-demo-two"
     }
   }
 }
