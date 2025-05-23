@@ -81,10 +81,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
 locals {
   function_apps = {
     "funcapp1" = {
-      name     = "funcapp-demo-one"
+      name     = "funcapp-demo-a"
     },
     "funcapp2" = {
-      name     = "funcapp-demo-two"
+      name     = "funcapp-demo-b"
     }
   }
 }
@@ -125,7 +125,7 @@ resource "azurerm_app_service_virtual_network_swift_connection" "integration" {
 resource "azurerm_private_endpoint" "pe" {
   for_each = azurerm_linux_function_app.funcapps
 
-  name                = "${each.key}-pe"
+  name                = "${each.key}-pep"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   subnet_id           = azurerm_subnet.subnet.id
