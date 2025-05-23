@@ -65,24 +65,26 @@ resource "azurerm_storage_account" "sa" {
 resource "azurerm_linux_function_app" "funcapps" {
   for_each = var.function_apps
 
-  name                = each.value.name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  service_plan_id     = azurerm_app_service_plan.plan.id
+  name                       = each.value.name
+  location                   = azurerm_resource_group.rg.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  service_plan_id            = azurerm_app_service_plan.plan.id
   storage_account_name       = azurerm_storage_account.sa[each.key].name
   storage_account_access_key = azurerm_storage_account.sa[each.key].primary_access_key
-  version             = each.value.version
-  os_type             = "linux"
 
   site_config {
     linux_fx_version = "Python|3.10"
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
-resource "azurerm_function_app_virtual_network_swift_connection" "vnetint" {
-  for_each        = var.function_apps
-  function_app_id = azurerm_linux_function_app.funcapps[each.key].id
-  subnet_id       = azurerm_subnet.subnet.id
+resource "azurerm_app_service_virtual_network_swift_connection" "vnetint" {
+  for_each       = var.function_apps
+  app_service_id = azurerm_linux_function_app.funcapps[each.key].id
+  subnet_id      = azurerm_subnet.subnet.id
 }
 
 resource "azurerm_private_endpoint" "pep" {
