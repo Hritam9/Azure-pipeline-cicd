@@ -42,14 +42,14 @@ resource "azurerm_service_plan" "plan" {
 
 # Virtual Network and Subnet
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-devops-demo"
+  name                = "vn-devops-demo"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "subnet-devops-demo"
+  name                 = "sub-devops-demo"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
@@ -81,10 +81,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
 locals {
   function_apps = {
     "funcapp1" = {
-      name     = "funcapp-demo-a"
+      name     = "funcapp-demo-a1"
     },
     "funcapp2" = {
-      name     = "funcapp-demo-b"
+      name     = "funcapp-demo-a2"
     }
   }
 }
@@ -125,7 +125,7 @@ resource "azurerm_app_service_virtual_network_swift_connection" "integration" {
 resource "azurerm_private_endpoint" "pe" {
   for_each = azurerm_linux_function_app.funcapps
 
-  name                = "${each.key}-pep"
+  name                = "${each.key}-p"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   subnet_id           = azurerm_subnet.subnet.id
