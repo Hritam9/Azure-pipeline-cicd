@@ -40,27 +40,35 @@ resource "azurerm_service_plan" "plan" {
   worker_count        = 1
 }
 
-# Virtual Network and Subnet
+# Virtual Network
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vn-devops-demo"
+  name                = "vnet-devops-demo"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = ["10.0.0.0/16"]
 }
 
-resource "azurerm_subnet" "subnet" {
-  name                 = "sub-devops-demo"
+# Delegated Subnet for VNet Integration
+resource "azurerm_subnet" "integration_subnet" {
+  name                 = "subnet-integration"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
-  service_endpoints    = ["Microsoft.Web"]
   delegation {
     name = "delegation"
     service_delegation {
-      name = "Microsoft.Web/serverFarms"
+      name    = "Microsoft.Web/serverFarms"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
+}
+
+# Non-delegated Subnet for Private Endpoints
+resource "azurerm_subnet" "private_endpoint_subnet" {
+  name                 = "subnet-pe"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.2.0/24"]
 }
 
 # Private DNS Zone
@@ -77,19 +85,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
   registration_enabled  = false
 }
 
-# Function Apps definition
+# Function App configuration
 locals {
   function_apps = {
     "funcapp1" = {
-      name     = "funcapp-demo-a1"
+      name = "funcapp-demo-a"
     },
     "funcapp2" = {
-      name     = "funcapp-demo-a2"
+      name = "funcapp-demo-b"
     }
   }
 }
 
-# Function Apps
+# Azure Function Apps
 resource "azurerm_linux_function_app" "funcapps" {
   for_each = local.function_apps
 
@@ -113,22 +121,22 @@ resource "azurerm_linux_function_app" "funcapps" {
   functions_extension_version = "~4"
 }
 
-# VNet Integration (via subnet delegation)
+# VNet Integration
 resource "azurerm_app_service_virtual_network_swift_connection" "integration" {
   for_each = azurerm_linux_function_app.funcapps
 
   app_service_id = each.value.id
-  subnet_id      = azurerm_subnet.subnet.id
+  subnet_id      = azurerm_subnet.integration_subnet.id
 }
 
 # Private Endpoints
 resource "azurerm_private_endpoint" "pe" {
   for_each = azurerm_linux_function_app.funcapps
 
-  name                = "${each.key}-p"
+  name                = "${each.key}-pe"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  subnet_id           = azurerm_subnet.subnet.id
+  subnet_id           = azurerm_subnet.private_endpoint_subnet.id
 
   private_service_connection {
     name                           = "${each.key}-privatesc"
@@ -138,7 +146,7 @@ resource "azurerm_private_endpoint" "pe" {
   }
 
   private_dns_zone_group {
-    name                 = "default"
+    name                 = "dns-zone-group"
     private_dns_zone_ids = [azurerm_private_dns_zone.dns.id]
   }
 }
